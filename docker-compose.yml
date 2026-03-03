@@ -1,0 +1,36 @@
+# User Management Service - Docker Compose Configuration
+
+services:
+  # =========================================================================
+  # User Management Service (Main Application)
+  # =========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: user-management-service
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+    networks:
+      - shared-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# =============================================================================
+# Networks - Join the shared external network
+# =============================================================================
+networks:
+  shared-network:
+    external: true
+    name: shared-network

@@ -320,6 +320,27 @@ class UserRepository:
             self.db.rollback()
             raise ValueError(f"Failed to delete user: {str(e)}")
 
+    def set_active_session(self, user_id: str, session_id: str) -> User:
+        """Set the currently active session for a user.
+
+        Args:
+            user_id: User UUID
+            session_id: Session UUID to mark as active (or None to clear)
+
+        Returns:
+            Updated User object
+
+        Raises:
+            ValueError: If user not found
+        """
+        user = self.get_user_by_id(user_id)
+        if not user:
+            raise ValueError(f"User with id {user_id} not found")
+        user.current_session_id = session_id
+        self.db.commit()
+        self.db.refresh(user)
+        return user
+
     def activate_fallback_profile(self, user_id: str, fallback_profile_id: str, 
                                  reason: str) -> User:
         """Activate drift fallback profile.

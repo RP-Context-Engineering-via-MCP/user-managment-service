@@ -91,6 +91,22 @@ def run_migration():
             else:
                 print("[=] All expected columns are present in `session`.")
 
+        # ------------------------------------------------------------------
+        # 2. Add `current_session_id` column to `user` table
+        # ------------------------------------------------------------------
+        if not column_exists(inspector, "user", "current_session_id"):
+            print('[+] Adding column: user.current_session_id ...')
+            conn.execute(text("""
+                ALTER TABLE "user"
+                ADD COLUMN current_session_id VARCHAR(36)
+            """))
+            conn.execute(text("""
+                CREATE INDEX ix_user_current_session_id ON "user" (current_session_id)
+            """))
+            print('    Column `current_session_id` added successfully.')
+        else:
+            print('[=] Column `user.current_session_id` already exists — skipping.')
+
     print()
     print("[✓] Migration completed successfully.")
     print("=" * 60)

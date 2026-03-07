@@ -101,6 +101,9 @@ class User(Base):
     fallback_reason = Column(String(500), nullable=True)
     fallback_activated_at = Column(DateTime(timezone=True), nullable=True)
 
+    # Tracks which session is currently active for this user
+    current_session_id = Column(String(36), nullable=True, index=True)
+
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):

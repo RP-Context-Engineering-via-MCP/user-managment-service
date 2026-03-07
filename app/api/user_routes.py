@@ -13,6 +13,7 @@ error handling, and response models for type safety.
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.core.database import get_db
 from app.services.user_service import UserService
 from app.schemas.user_dto import (
@@ -78,7 +79,8 @@ def to_user_response(user) -> dict:
         "dynamic_profile_ready": user.dynamic_profile_ready == "true",
         "fallback_profile_id": user.fallback_profile_id,
         "fallback_reason": user.fallback_reason,
-        "fallback_activated_at": user.fallback_activated_at
+        "fallback_activated_at": user.fallback_activated_at,
+        "current_session_id": user.current_session_id,
     }
 
 
@@ -706,4 +708,45 @@ def deactivate_fallback(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to deactivate fallback: {str(e)}"
+        )
+
+
+class ActiveSessionRequest(BaseModel):
+    """Request model for setting the active session."""
+    session_id: Optional[str] = None
+
+
+@router.patch("/{user_id}/active-session", response_model=UserResponse)
+def set_active_session(
+    user_id: str,
+    body: ActiveSessionRequest,
+    service: UserService = Depends(get_user_service)
+):
+    """Set or clear the currently active session for a user.
+
+    Pass a valid session_id to mark it as the active session,
+    or pass null / omit it to clear the active session.
+
+    Args:
+        user_id: Unique user identifier.
+        body: JSON body with optional session_id field.
+        service: Injected UserService dependency.
+
+    Returns:
+        UserResponse: Updated user data with current_session_id reflected.
+
+    Raises:
+        HTTPException 404: If the user or session does not exist,
+                           or the session does not belong to the user.
+        HTTPException 500: If the update fails.
+    """
+    try:
+        user = service.set_active_session(user_id, body.session_id)
+        return to_user_response(user)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update active session: {str(e)}"
         )

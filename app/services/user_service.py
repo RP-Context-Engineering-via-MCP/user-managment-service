@@ -347,3 +347,24 @@ class UserService:
             Updated User object
         """
         return self.repo.update_user(user_id, status="active")
+
+    def set_active_session(self, user_id: str, session_id: str) -> User:
+        """Set or clear the currently active session for a user.
+
+        Args:
+            user_id: User UUID
+            session_id: Session UUID to mark as active, or None to clear
+
+        Returns:
+            Updated User object
+
+        Raises:
+            ValueError: If user not found, or session_id provided but does not
+                        exist / does not belong to this user
+        """
+        if session_id is not None:
+            from app.repositories.session_repo import SessionRepository
+            session = SessionRepository(self.repo.db).get_session_by_id(session_id)
+            if not session or session.user_id != user_id:
+                raise ValueError(f"Session {session_id} not found for user {user_id}")
+        return self.repo.set_active_session(user_id, session_id)

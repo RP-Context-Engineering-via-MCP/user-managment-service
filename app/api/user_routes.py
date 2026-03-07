@@ -716,6 +716,43 @@ class ActiveSessionRequest(BaseModel):
     session_id: Optional[str] = None
 
 
+@router.get("/{user_id}/current-session")
+def get_current_session(
+    user_id: str,
+    service: UserService = Depends(get_user_service)
+):
+    """Retrieve the current active session ID for a user.
+
+    Args:
+        user_id: Unique user identifier.
+        service: Injected UserService dependency.
+
+    Returns:
+        dict: Object containing user_id and current_session_id (null if none set).
+
+    Raises:
+        HTTPException 404: If the user does not exist.
+    """
+    try:
+        user = service.get_user_by_id(user_id)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User {user_id} not found"
+            )
+        return {
+            "user_id": user.user_id,
+            "current_session_id": user.current_session_id,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve current session: {str(e)}"
+        )
+
+
 @router.patch("/{user_id}/active-session", response_model=UserResponse)
 def set_active_session(
     user_id: str,

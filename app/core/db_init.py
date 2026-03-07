@@ -8,8 +8,8 @@ All operations are idempotent and safe to run multiple times.
 
 from app.core.database import engine, Base
 
-# Import user model to ensure it's registered with SQLAlchemy
-from app.models import user
+# Import models to ensure they are registered with SQLAlchemy
+from app.models import user, session  # noqa: F401
 
 
 def init_db() -> None:

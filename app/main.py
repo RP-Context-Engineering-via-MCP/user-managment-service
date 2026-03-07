@@ -15,6 +15,7 @@ from app.core.db_init import init_db
 from app.core.logging_config import setup_logging
 from app.core.database import init_db as init_async_db, close_db
 from app.api.user_routes import router as user_router
+from app.api.session_routes import router as session_router
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(user_router)
+    app.include_router(session_router)
 
     return app
 

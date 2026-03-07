@@ -5,6 +5,7 @@ Supports both local authentication and OAuth providers (Google, GitHub).
 """
 
 from sqlalchemy import Column, String, DateTime, Enum
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
 import enum
@@ -99,6 +100,8 @@ class User(Base):
     fallback_profile_id = Column(String(24), nullable=True)
     fallback_reason = Column(String(500), nullable=True)
     fallback_activated_at = Column(DateTime(timezone=True), nullable=True)
+
+    sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         """Return string representation of User instance."""

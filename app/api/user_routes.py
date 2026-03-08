@@ -787,3 +787,47 @@ def set_active_session(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update active session: {str(e)}"
         )
+
+
+class PredefinedProfileIdResponse(BaseModel):
+    """Response model for predefined profile ID."""
+    user_id: str
+    predefined_profile_id: Optional[str] = None
+
+
+@router.get("/{user_id}/predefined-profile-id", response_model=PredefinedProfileIdResponse)
+def get_predefined_profile_id(
+    user_id: str,
+    service: UserService = Depends(get_user_service)
+):
+    """Retrieve the predefined profile ID for a user.
+
+    Args:
+        user_id: Unique user identifier.
+        service: Injected UserService dependency.
+
+    Returns:
+        PredefinedProfileIdResponse: Object containing user_id and predefined_profile_id.
+
+    Raises:
+        HTTPException 404: If the user does not exist.
+        HTTPException 500: If retrieval fails.
+    """
+    try:
+        user = service.get_user_by_id(user_id)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User {user_id} not found"
+            )
+        return PredefinedProfileIdResponse(
+            user_id=user.user_id,
+            predefined_profile_id=user.predefined_profile_id
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve predefined profile ID: {str(e)}"
+        )

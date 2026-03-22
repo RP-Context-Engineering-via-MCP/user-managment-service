@@ -81,6 +81,7 @@ def to_user_response(user) -> dict:
         "fallback_reason": user.fallback_reason,
         "fallback_activated_at": user.fallback_activated_at,
         "current_session_id": user.current_session_id,
+        "mcp_token": user.mcp_token,
     }
 
 
@@ -341,6 +342,21 @@ async def github_oauth_callback(
             detail=f"GitHub OAuth failed: {str(e)}"
         )
 
+
+
+class McpTokenResponse(BaseModel):
+    mcp_token: str
+
+@router.get("/verify-mcp-token", response_model=UserResponse)
+def verify_mcp_token(
+    token: str = Query(...),
+    db: Session = Depends(get_db)
+):
+    from app.models.user import User
+    user = db.query(User).filter(User.mcp_token == token).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid MCP token")
+    return to_user_response(user)
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -831,3 +847,22 @@ def get_predefined_profile_id(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve predefined profile ID: {str(e)}"
         )
+
+
+@router.post("/{user_id}/mcp-token", response_model=McpTokenResponse)
+def generate_mcp_token(
+    user_id: str,
+    db: Session = Depends(get_db)
+):
+    import secrets
+    from app.models.user import User
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Generate an opaque token
+    token = f"mcp_{secrets.token_hex(24)}"
+    user.mcp_token = token
+    db.commit()
+    db.refresh(user)
+    return {"mcp_token": token}

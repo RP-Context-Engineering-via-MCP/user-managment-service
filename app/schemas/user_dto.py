@@ -161,6 +161,7 @@ class UserResponse(BaseModel):
     fallback_reason: Optional[str] = None
     fallback_activated_at: Optional[datetime] = None
     current_session_id: Optional[str] = None
+    mcp_token: Optional[str] = None
 
     class Config:
         from_attributes = True

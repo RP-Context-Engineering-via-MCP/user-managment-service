@@ -104,6 +104,8 @@ class User(Base):
     # Tracks which session is currently active for this user
     current_session_id = Column(String(36), nullable=True, index=True)
 
+    mcp_token = Column(String(255), unique=True, index=True, nullable=True)
+
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):

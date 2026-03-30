@@ -107,6 +107,22 @@ def run_migration():
         else:
             print('[=] Column `user.current_session_id` already exists — skipping.')
 
+        # ------------------------------------------------------------------
+        # 3. Add `mcp_token` column to `user` table
+        # ------------------------------------------------------------------
+        if not column_exists(inspector, "user", "mcp_token"):
+            print('[+] Adding column: user.mcp_token ...')
+            conn.execute(text("""
+                ALTER TABLE "user"
+                ADD COLUMN mcp_token VARCHAR(255) UNIQUE
+            """))
+            conn.execute(text("""
+                CREATE INDEX ix_user_mcp_token ON "user" (mcp_token)
+            """))
+            print('    Column `mcp_token` added successfully.')
+        else:
+            print('[=] Column `user.mcp_token` already exists — skipping.')
+
     print()
     print("[✓] Migration completed successfully.")
     print("=" * 60)
